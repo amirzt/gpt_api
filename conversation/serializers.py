@@ -6,16 +6,17 @@ from conversation.models import Conversation, Message
 class CreateConversationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Conversation
-        fields = ['gpt_model']
+        fields = []
 
     def save(self, **kwargs):
         conversation = Conversation(user=self.context['user'],
-                                    gpt_model=self.validated_data['gpt_model'])
+                                    gpt_model=self.context['gpt_model'])
         conversation.save()
         return conversation
 
 
 class GetConversationSerializer(serializers.ModelSerializer):
+    gpt_model = serializers.CharField(source='gpt_model.model_name')
 
     class Meta:
         model = Conversation

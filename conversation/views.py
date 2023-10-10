@@ -3,7 +3,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from conversation.models import Conversation, Message
+from conversation.models import Conversation, Message, GPTModel
 from conversation.serializers import CreateConversationSerializer, GetConversationSerializer, AddMessageSerializer, \
     GetMessageSerializer
 
@@ -11,7 +11,10 @@ from conversation.serializers import CreateConversationSerializer, GetConversati
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def create_conversation(request):
-    serializer = CreateConversationSerializer(data=request.data, context={'user': request.user})
+    serializer = CreateConversationSerializer(data=request.data,
+                                              context={'user': request.user,
+                                                       'gpt_model': GPTModel.objects.get(
+                                                           model_name=request.data['gpt_model'])})
     if serializer.is_valid():
         serializer.save()
         return Response(status=status.HTTP_200_OK)
@@ -65,6 +68,3 @@ def get_message(request):
     messages = Message.objects.filter(conversation=request.data['conversation'])
     serializer = GetMessageSerializer(messages, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
-
-
-
