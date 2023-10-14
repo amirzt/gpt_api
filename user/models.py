@@ -60,6 +60,7 @@ class AppVersion(models.Model):
     version = models.IntegerField()
     package_name = models.CharField(max_length=100)
     is_force = models.BooleanField(default=False)
+    description = models.TextField(max_length=1000, default='')
 
     def __str__(self):
         return self.package_name
