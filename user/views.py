@@ -5,7 +5,7 @@ from rest_framework.response import Response
 
 from shop.models import Transaction, GoogleAdmob
 from shop.serializers import GoogleAdmobSerializer
-from user.models import CustomUser
+from user.models import CustomUser, ApiKey, AppVersion
 from user.serializers import GetUserSerializer
 from rest_framework.authtoken.models import Token
 from django.utils import timezone
@@ -54,6 +54,7 @@ def login(request):
         yearly = False
 
     admob = GoogleAdmob.objects.filter(package_name=request.data['package_name'])
+    api_key = ApiKey.objects.get(package_name=request.data['package_name'])
 
     user.is_active = True
     user.save()
@@ -62,5 +63,13 @@ def login(request):
                      'expired': expired,
                      'yearly': yearly,
                      'username': user.username,
-                     'admob': GoogleAdmobSerializer(admob, many=True).data
+                     'admob': GoogleAdmobSerializer(admob, many=True).data,
+                     'api_key': api_key.key
                      })
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def get_app_version(request):
+    last_version = AppVersion.objects.filter(package_name=request.data['package_name']).order_by('version').last()
+    return Response({'version': last_version.version})

@@ -46,3 +46,21 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     updated_at = models.DateTimeField(auto_now=True)
 
     objects = CustomUserManager()
+
+
+class ApiKey(models.Model):
+    key = models.CharField(max_length=100)
+    package_name = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.key
+
+
+class AppVersion(models.Model):
+    version = models.IntegerField()
+    package_name = models.CharField(max_length=100)
+    is_force = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.package_name
+

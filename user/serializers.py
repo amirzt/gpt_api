@@ -2,7 +2,7 @@ import datetime
 
 from rest_framework import serializers
 
-from user.models import CustomUser
+from user.models import CustomUser, AppVersion
 
 
 class AddCustomUserSerializer(serializers.ModelSerializer):
@@ -33,3 +33,11 @@ class GetUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
         fields = '__all__'
+
+
+class GetAppVersion(serializers.ModelSerializer):
+
+    class Meta:
+        model = AppVersion
+        fields = '__all__'
+
