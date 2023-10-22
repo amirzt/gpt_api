@@ -2,7 +2,7 @@ import datetime
 
 from rest_framework import serializers
 
-from user.models import CustomUser, AppVersion
+from user.models import CustomUser, AppVersion, ApiKey
 
 
 class AddCustomUserSerializer(serializers.ModelSerializer):
@@ -39,5 +39,12 @@ class GetAppVersion(serializers.ModelSerializer):
 
     class Meta:
         model = AppVersion
+        fields = '__all__'
+
+
+class GetApiKeysSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ApiKey
         fields = '__all__'
 

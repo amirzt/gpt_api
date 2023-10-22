@@ -1,11 +1,14 @@
+import requests
+from django.http import StreamingHttpResponse
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 
 from conversation.models import Conversation, Message, GPTModel
 from conversation.serializers import CreateConversationSerializer, GetConversationSerializer, AddMessageSerializer, \
     GetMessageSerializer
+from user.models import ApiKey
 
 
 @api_view(['POST'])
@@ -68,3 +71,26 @@ def get_message(request):
     messages = Message.objects.filter(conversation=request.data['conversation'])
     serializer = GetMessageSerializer(messages, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def send_message_to_gpt(request):
+    api_key = ApiKey.objects.all().last().key
+    openai_api_key = 'Bearer '+api_key
+    openai_url = 'https://api.openai.com/v1/chat/completions'
+
+    headers = {
+        'Authorization': openai_api_key,
+        'Content-Type': 'application/json'
+    }
+
+    response = requests.post(openai_url, headers=headers, json=request.data, stream=True)
+    if response.status_code == 200:
+        def stream_generator():
+            for chunk in response.iter_content(chunk_size=8192):
+                yield chunk
+        return StreamingHttpResponse(stream_generator(), content_type=response.headers['Content-Type'])
+    else:
+        return Response(response.json(), status=response.status_code)
+
