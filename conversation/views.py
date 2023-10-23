@@ -61,7 +61,9 @@ def create_conversation(request):
                                role=Message.RoleChoices.user,
                                content=request.data['first_question'])
 
-        return Response(status=status.HTTP_200_OK)
+        return Response(status=status.HTTP_200_OK, data={
+            'id': conversation.id
+        })
     return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
