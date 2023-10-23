@@ -17,6 +17,11 @@ class CreateConversationSerializer(serializers.ModelSerializer):
 
 class GetConversationSerializer(serializers.ModelSerializer):
     gpt_model = serializers.CharField(source='gpt_model.model_name')
+    last_message = serializers.SerializerMethodField('get_last_message')
+
+    @staticmethod
+    def get_last_message(self):
+        return GetMessageSerializer(Message.objects.filter(conversation=self).last()).data
 
     class Meta:
         model = Conversation

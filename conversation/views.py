@@ -11,6 +11,38 @@ from conversation.serializers import CreateConversationSerializer, GetConversati
 from user.models import ApiKey
 
 
+def get_chat_summary(data):
+
+    # get summary
+    api_key = ApiKey.objects.all().last().key
+    openai_api_key = 'Bearer ' + api_key
+    openai_url = 'https://api.openai.com/v1/chat/completions'
+
+    headers = {
+        'Authorization': openai_api_key,
+        'Content-Type': 'application/json'
+    }
+    body = {
+        "model": "gpt-3.5-turbo",
+        "messages": [
+            {
+                "role": "system",
+                "content": "give me a short title for following question"
+            },
+            {
+                "role": "system",
+                "content": data['first_question']
+            }
+
+        ]
+    }
+    response = requests.post(openai_url, headers=headers, json=body, stream=False)
+    if response.status_code == 200:
+        return response.json()['choices'][0]['message']['content']
+    else:
+        return 'new conversation'
+
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def create_conversation(request):
@@ -19,7 +51,16 @@ def create_conversation(request):
                                                        'gpt_model': GPTModel.objects.get(
                                                            model_name=request.data['gpt_model'])})
     if serializer.is_valid():
-        serializer.save()
+        conversation = serializer.save()
+
+        title = get_chat_summary(request.data)
+        conversation.summary = title
+        conversation.save()
+
+        Message.objects.create(conversation=conversation,
+                               role=Message.RoleChoices.user,
+                               content=request.data['first_question'])
+
         return Response(status=status.HTTP_200_OK)
     return Response(status=status.HTTP_400_BAD_REQUEST)
 
