@@ -104,7 +104,10 @@ def add_message(request):
         elif 'image' in request.data:
             message.image = request.data['image']
         message.save()
-        return Response(status=status.HTTP_200_OK)
+        if Message.objects.filter(conversation__user=request.user).count() > 10:
+            return Response(status=status.HTTP_402_PAYMENT_REQUIRED)
+        else:
+            return Response(status=status.HTTP_200_OK)
     return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -114,6 +117,16 @@ def get_message(request):
     messages = Message.objects.filter(conversation=request.data['conversation'])
     serializer = GetMessageSerializer(messages, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def update_message(request):
+    conversation = Conversation.objects.get(id=request.data['conversation'])
+    message = Message.objects.filter(conversation=conversation).order_by('created_at').last()
+    message.image = request.data['image']
+    message.save()
+    return Response(status=status.HTTP_200_OK)
 
 
 @api_view(['POST'])

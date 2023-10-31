@@ -9,6 +9,7 @@ urlpatterns = [
     path('delete_conversation/', views.delete_conversation, name='delete_conversation'),
     path('add_message/', views.add_message, name='add_message'),
     path('get_message/', views.get_message, name='get_message'),
+    path('update_message/', views.update_message, name='update_message'),
     path('send_message_to_gpt/', views.send_message_to_gpt, name='send_message_to_gpt'),
 
 ]

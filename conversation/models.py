@@ -30,7 +30,7 @@ class Message(models.Model):
     conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE)
     role = models.CharField(max_length=10, choices=RoleChoices.choices)
     content = models.TextField(max_length=1000, null=True, blank=False)
-    image = models.ImageField(upload_to='conversations/images', null=True, blank=True)
+    image = models.URLField(null=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

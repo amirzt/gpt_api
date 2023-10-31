@@ -48,3 +48,4 @@ class GetApiKeysSerializer(serializers.ModelSerializer):
         model = ApiKey
         fields = '__all__'
 
+

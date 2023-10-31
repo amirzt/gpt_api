@@ -3,10 +3,11 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
+from conversation.models import Message
 from shop.models import Transaction, GoogleAdmob
 from shop.serializers import GoogleAdmobSerializer
 from user.models import CustomUser, ApiKey, AppVersion
-from user.serializers import GetUserSerializer, GetApiKeysSerializer
+from user.serializers import GetUserSerializer, GetApiKeysSerializer, GetAppVersion
 from rest_framework.authtoken.models import Token
 from django.utils import timezone
 
@@ -58,13 +59,17 @@ def login(request):
 
     user.is_active = True
     user.save()
+
+    message_count = Message.objects.filter(conversation__user=user).count()
+
     token, created = Token.objects.get_or_create(user=user)
     return Response({'token': token.key,
                      'expired': expired,
                      'yearly': yearly,
                      'username': user.username,
                      'admob': GoogleAdmobSerializer(admob, many=True).data,
-                     'api_key': GetApiKeysSerializer(api_key, many=True).data
+                     'api_key': GetApiKeysSerializer(api_key, many=True).data,
+                     'limit_reached': True if message_count >= 10 else False
                      })
 
 
@@ -72,4 +77,5 @@ def login(request):
 @permission_classes([AllowAny])
 def get_app_version(request):
     last_version = AppVersion.objects.filter(package_name=request.data['package_name']).order_by('version').last()
-    return Response({'version': last_version.version})
+    serializer = GetAppVersion(last_version)
+    return Response(serializer.data)
