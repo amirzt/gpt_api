@@ -1,3 +1,5 @@
+import threading
+
 import requests
 from django.http import StreamingHttpResponse
 from rest_framework import status
@@ -31,7 +33,7 @@ def get_chat_summary(data):
             },
             {
                 "role": "system",
-                "content": data['first_question']
+                "content": data
             }
 
         ]
@@ -41,6 +43,17 @@ def get_chat_summary(data):
         return response.json()['choices'][0]['message']['content']
     else:
         return 'new conversation'
+
+
+def get_summary(input_map):
+    title = get_chat_summary(input_map['first_question'])
+    conversation = Conversation.objects.get(id=input_map['conversation'])
+    conversation.summary = title
+    conversation.save()
+
+    Message.objects.create(conversation=conversation,
+                           role=Message.RoleChoices.user,
+                           content=input_map['first_question'])
 
 
 @api_view(['POST'])
@@ -53,13 +66,14 @@ def create_conversation(request):
     if serializer.is_valid():
         conversation = serializer.save()
 
-        title = get_chat_summary(request.data)
-        conversation.summary = title
-        conversation.save()
-
-        Message.objects.create(conversation=conversation,
-                               role=Message.RoleChoices.user,
-                               content=request.data['first_question'])
+        data = {
+            'conversation': conversation.id,
+            'first_question': request.data['first_question']
+        }
+        thread = threading.Thread(target=get_summary,
+                                  args=[data])
+        thread.setDaemon(True)
+        thread.start()
 
         return Response(status=status.HTTP_200_OK, data={
             'id': conversation.id
@@ -70,7 +84,7 @@ def create_conversation(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_conversation(request):
-    conversations = Conversation.objects.filter(user=request.user)
+    conversations = Conversation.objects.filter(user=request.user).order_by('-id')
     serializer = GetConversationSerializer(conversations, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -104,7 +118,7 @@ def add_message(request):
         elif 'image' in request.data:
             message.image = request.data['image']
         message.save()
-        if Message.objects.filter(conversation__user=request.user).count() > 10:
+        if Message.objects.filter(conversation__user=request.user).count() > 20:
             return Response(status=status.HTTP_402_PAYMENT_REQUIRED)
         else:
             return Response(status=status.HTTP_200_OK)

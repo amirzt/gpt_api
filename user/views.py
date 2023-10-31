@@ -47,13 +47,6 @@ def login(request):
         user.save()
         expired = True
 
-    try:
-        Transaction.objects.get(user=user,
-                                duration=365)
-        yearly = True
-    except Transaction.DoesNotExist:
-        yearly = False
-
     admob = GoogleAdmob.objects.filter(package_name=request.data['package_name'])
     api_key = ApiKey.objects.filter(package_name=request.data['package_name'])
 
@@ -65,11 +58,10 @@ def login(request):
     token, created = Token.objects.get_or_create(user=user)
     return Response({'token': token.key,
                      'expired': expired,
-                     'yearly': yearly,
                      'username': user.username,
                      'admob': GoogleAdmobSerializer(admob, many=True).data,
                      'api_key': GetApiKeysSerializer(api_key, many=True).data,
-                     'limit_reached': True if message_count >= 10 else False
+                     'limit_reached': True if message_count >= 20 else False
                      })
 
 
