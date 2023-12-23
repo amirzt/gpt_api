@@ -18,7 +18,7 @@ class FontAdmin(admin.ModelAdmin):
     list_display = ('title', 'price', 'is_available', 'duration', 'is_special')
     # list_filter = ('category', 'is_done', 'date',)
     search_fields = ('title__startswith',)
-    fields = ('title', 'price', 'is_available', 'duration', 'description', 'is_special', 'package_name')
+    fields = ('title', 'price', 'is_available', 'duration', 'description', 'bazar_myket', 'is_special', 'package_name')
 
 
 @admin.register(GooglePlayCode)

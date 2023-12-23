@@ -1,3 +1,6 @@
+import datetime
+
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -17,6 +20,7 @@ import json
 import threading
 
 from shop.verifications import update_expire_date
+from user.models import CustomUser
 
 ZP_API_REQUEST = "https://api.zarinpal.com/pg/v4/payment/request.json"
 ZP_API_VERIFY = "https://api.zarinpal.com/pg/v4/payment/verify.json"
@@ -198,3 +202,34 @@ def verify(request):
         return render(request, 'error_payment.html')
 
         # return HttpResponse('Transaction failed or canceled by user')
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def add_bazar_myket_order(request):
+    plan = ZarinPalPlan.objects.get(id=request.data['plan'])
+    # package_name = CustomUser.objects.get(id=request.user.id).package_name
+
+    serializer = AddTransactionSerializer(data=request.data,
+                                          context={'user': request.user,
+                                                   # 'package_name': package_name,
+                                                   'duration': plan.duration,
+                                                   'price': plan.price,
+                                                   'gateway': request.data['gateway'],
+                                                   'gateway_code': request.data['gateway_code'],
+                                                   'description': 'خرید اشتراک ' + plan.title})
+    if serializer.is_valid():
+        transaction = serializer.save()
+        transaction.state = 'success'
+        transaction.save()
+
+        user = CustomUser.objects.get(id=request.user.id)
+        if user.expire_date < timezone.now():
+            user.expire_date = timezone.now() + datetime.timedelta(days=int(plan.duration))
+        else:
+            user.expire_date += datetime.timedelta(days=int(plan.duration))
+        user.save()
+        #
+        return Response(status=status.HTTP_200_OK)
+    else:
+        return Response(status=status.HTTP_400_BAD_REQUEST)

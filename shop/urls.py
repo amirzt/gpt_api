@@ -12,4 +12,6 @@ urlpatterns = [
     path('request/', views.send_request, name='request'),
     path('verify/', views.verify, name='verify'),
     path('get_admob/', views.get_admob, name='get_admob'),
+    path('add_bazar_myket_order/', views.add_bazar_myket_order, name='add_bazar_myket_order'),
+
 ]

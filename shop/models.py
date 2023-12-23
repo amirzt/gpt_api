@@ -38,6 +38,7 @@ class ZarinPalPlan(models.Model):
     duration = models.IntegerField(null=False, blank=False)
     is_special = models.BooleanField(default=False)
     package_name = models.CharField(max_length=255, null=False, default='')
+    bazar_myket = models.CharField(max_length=100, default='', null=False)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -74,6 +75,8 @@ class Transaction(models.Model):
         ZARINPAL = 'zarinpal'
         GOOGLEPLAY = 'googleplay'
         APPSTORE = 'appstore'
+        BAZAR = 'bazar'
+        MYKET = 'myket'
 
     class StateChoices(models.TextChoices):
         PENDING = 'pending'
