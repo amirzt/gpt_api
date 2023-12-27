@@ -61,6 +61,7 @@ def login(request):
                      'username': user.username,
                      'admob': GoogleAdmobSerializer(admob, many=True).data,
                      'api_key': GetApiKeysSerializer(api_key, many=True).data,
+                     'expire_date': user.expire_date,
                      'limit_reached': True if message_count >= 20 else False
                      })
 
